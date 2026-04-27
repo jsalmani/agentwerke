@@ -24,7 +24,11 @@ export default function Chat() {
       // First request has no sessionId; the API mints one and returns it in
       // x-session-id, which we pull off in the fetch hook below.
       prepareSendMessagesRequest: ({ messages, body }) => ({
-        body: { ...body, messages, sessionId },
+        body: {
+          messages,
+          sessionId,
+          ...(body || {}),
+        },
       }),
       fetch: async (...args) => {
         const res = await fetch(...args);

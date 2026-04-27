@@ -61,31 +61,47 @@ export interface AvailableSlot {
  * Returns a flat array of {start, end} ISO timestamps.
  */
 export async function getAvailableSlots(daysAhead: number = 14): Promise<AvailableSlot[]> {
-  const eventTypeSlug = process.env.CALCOM_EVENT_TYPE_SLUG || 'discovery-call';
-  const username = process.env.CALCOM_USERNAME;
-  if (!username) {
-    throw new Error('CALCOM_USERNAME is not set');
+  const eventTypeId = process.env.CALCOM_EVENT_TYPE_ID;
+  if (!eventTypeId) {
+    throw new Error('CALCOM_EVENT_TYPE_ID is not set');
   }
 
   const startDate = new Date();
   const endDate = new Date(startDate.getTime() + daysAhead * 24 * 60 * 60 * 1000);
 
+  // Slots endpoint uses ISO 8601 dates and accepts eventTypeId directly.
+  // We pass the API version header 2024-09-04 specifically — the slots
+  // endpoint is on a different version than bookings (2024-08-13).
   const params = new URLSearchParams({
-    eventTypeSlug,
-    username,
-    start: startDate.toISOString(),
-    end: endDate.toISOString(),
+    eventTypeId: String(eventTypeId),
+    start: startDate.toISOString().slice(0, 10), // YYYY-MM-DD
+    end: endDate.toISOString().slice(0, 10),
+    timeZone: 'America/New_York',
   });
 
-  const data = await calFetch<{
+  const apiKey = process.env.CALCOM_API_KEY;
+  if (!apiKey) throw new Error('CALCOM_API_KEY is not set');
+
+  const res = await fetch(`${CAL_API_BASE}/slots?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'cal-api-version': '2024-09-04',
+    },
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Cal.com slots API ${res.status}: ${body}`);
+  }
+
+  const data = (await res.json()) as {
     status: string;
     data: Record<string, Array<{ start: string; end?: string }>>;
-  }>(`/slots?${params.toString()}`);
+  };
 
-  // Cal.com returns slots grouped by date. Flatten to a single list and add `end`
-  // (assume 30-min slots if end is missing).
+  // Cal.com returns slots grouped by date. Flatten and add `end` (30-min default).
   const slots: AvailableSlot[] = [];
-  for (const dateKey of Object.keys(data.data)) {
+  for (const dateKey of Object.keys(data.data || {})) {
     for (const slot of data.data[dateKey]) {
       const start = slot.start;
       const end = slot.end || new Date(new Date(start).getTime() + 30 * 60 * 1000).toISOString();

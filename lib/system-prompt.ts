@@ -3,12 +3,9 @@ import { KNOWLEDGE_BASE } from './knowledge-base.generated';
 /**
  * Avery's identity and operating instructions.
  *
- * This prompt is intentionally separated from the knowledge base. The KB is the
- * stable, cached content that rarely changes mid-conversation. This prompt
- * defines behavior, voice, escalation logic, and guardrails.
- *
- * Both go into a single cached system message, but logically they're different
- * concerns and we may iterate on them at different rates.
+ * The system prompt + KB are returned as a plain string from buildSystemMessage().
+ * Prompt caching with 1-hour TTL is configured separately via providerOptions
+ * on the streamText() call (see app/api/chat/route.ts).
  */
 
 const AGENT_NAME = process.env.NEXT_PUBLIC_AGENT_NAME || 'Avery';
@@ -53,7 +50,6 @@ You have access to the following tools. Use them when appropriate:
 - **bookDiscoveryCall(startTime, name, email, notes)** — Book a confirmed slot. Always confirm the time with the visitor first; never book without their explicit go-ahead.
 - **captureLead(email, name, reason)** — Capture contact info for someone who isn't ready to book a call but is interested. Always ask permission before capturing.
 - **handoffToHuman(reason)** — Send ${FOUNDER_NAME} an alert when a conversation needs human follow-up — e.g., complex scoping questions, custom pricing, legal/compliance review, or any situation outside your competence.
-- **searchKnowledgeBase(topic)** — Available if you need to find a specific piece of information. Most of the time you don't need this — the knowledge base is already in your context.
 
 When using tools, narrate what you're doing in plain language ("Let me check Jason's calendar...") so the visitor knows something is happening.
 
@@ -105,27 +101,9 @@ ${KNOWLEDGE_BASE}
 `;
 
 /**
- * Returns the system prompt as an array of message content blocks, with the
- * stable knowledge-base portion marked for prompt caching.
- *
- * Anthropic's prompt caching gives us 90% off on cache reads. We mark the
- * full identity + KB block as cacheable with 1-hour TTL. Per-conversation
- * dynamic content (visitor's session ID, etc.) goes elsewhere, never inside
- * this cached block.
- *
- * NOTE: Pass `ttl: '1h'` explicitly. Anthropic silently reverted the default
- * to 5-min in March 2026 (GitHub issue #46829).
+ * Returns the system prompt as a plain string. Caching is handled separately
+ * in the streamText() call via providerOptions.
  */
-export function buildSystemMessage() {
-  return [
-    {
-      type: 'text' as const,
-      text: AVERY_IDENTITY,
-      providerOptions: {
-        anthropic: {
-          cacheControl: { type: 'ephemeral', ttl: '1h' },
-        },
-      },
-    },
-  ];
+export function buildSystemMessage(): string {
+  return AVERY_IDENTITY;
 }

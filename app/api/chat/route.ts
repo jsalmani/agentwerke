@@ -81,10 +81,19 @@ export async function POST(req: Request) {
     // Default to Haiku 4.5 for speed. Override per-deploy via env if you want Sonnet.
     model: anthropic(process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5'),
     system: buildSystemMessage(),
-    messages: convertToModelMessages(messages),
+    messages: await convertToModelMessages(messages),
     tools: buildTools(sessionId),
     stopWhen: stepCountIs(6),
     temperature: 0.4, // Conversational, but consistent
+
+    // Cache the long system prompt + KB. 90% off on cache reads.
+    // Pass ttl: '1h' explicitly because Anthropic silently reverted the
+    // default to 5-min in March 2026 (GitHub anthropics/claude-code#46829).
+    providerOptions: {
+      anthropic: {
+        cacheControl: { type: 'ephemeral', ttl: '1h' },
+      },
+    },
 
     // Hook to log the final assistant turn after streaming completes.
     onFinish: async (event) => {
