@@ -4,29 +4,59 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useEffect, useRef, useState } from 'react';
 
-const QUICK_REPLIES = [
-  'What do you do?',
-  'How much does this cost?',
-  'Book a discovery call',
-];
+type Vertical = 'parent' | 'brokerage';
+
+interface ChatProps {
+  vertical?: Vertical;
+}
 
 const AGENT_NAME = process.env.NEXT_PUBLIC_AGENT_NAME || 'Avery';
 
-export default function Chat() {
+// Per-vertical UI copy: welcome message + quick-reply pills.
+const VERTICAL_COPY: Record<
+  Vertical,
+  { tagline: string; welcome: string; quickReplies: string[] }
+> = {
+  parent: {
+    tagline: "Agentwerke's website agent · powered by Claude",
+    welcome:
+      "Hi — I'm Avery, the agent on Agentwerke's website. I can answer questions about what we do, walk you through pricing, and book you a discovery call with Jason if you're interested.",
+    quickReplies: [
+      'What do you do?',
+      'How much does this cost?',
+      'Book a discovery call',
+    ],
+  },
+  brokerage: {
+    tagline: 'Agentwerke for Broker-Dealers · powered by Claude',
+    welcome:
+      "I'm Avery, the agent on Agentwerke's broker-dealer page. I can walk you through what we build for independent BDs, talk pricing and process, and book a 30-minute call with Jason if you want to take it further.",
+    quickReplies: [
+      'What do you build for BDs?',
+      'How does this work with our WSPs?',
+      'Pricing for our firm',
+      'Book a call',
+    ],
+  },
+};
+
+export default function Chat({ vertical = 'parent' }: ChatProps) {
   const [input, setInput] = useState('');
   const [sessionId, setSessionId] = useState<string | undefined>();
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const copy = VERTICAL_COPY[vertical];
+
   const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({
       api: '/api/chat',
-      // Echo the sessionId back on every request so the audit trail stays linked.
-      // First request has no sessionId; the API mints one and returns it in
-      // x-session-id, which we pull off in the fetch hook below.
+      // Echo the sessionId + vertical on every request so the audit trail stays
+      // linked and the API knows which Avery persona to load.
       prepareSendMessagesRequest: ({ messages, body }) => ({
         body: {
           messages,
           sessionId,
+          vertical,
           ...(body || {}),
         },
       }),
@@ -69,7 +99,7 @@ export default function Chat() {
         </div>
         <div>
           <div className="font-medium text-sm text-zinc-900">{AGENT_NAME}</div>
-          <div className="text-xs text-zinc-500">Agentwerke's website agent · powered by Claude</div>
+          <div className="text-xs text-zinc-500">{copy.tagline}</div>
         </div>
       </div>
 
@@ -77,10 +107,7 @@ export default function Chat() {
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
         {messages.length === 0 && (
           <div className="text-zinc-700 text-sm leading-relaxed">
-            <p className="mb-3">
-              Hi — I'm {AGENT_NAME}, the agent on Agentwerke's website. I can answer questions about what we do,
-              walk you through pricing, and book you a discovery call with Jason if you're interested.
-            </p>
+            <p className="mb-3">{copy.welcome}</p>
             <p className="text-zinc-500">Pick a starting point below or just ask me anything.</p>
           </div>
         )}
@@ -111,7 +138,7 @@ export default function Chat() {
       {/* Quick replies (only on first turn) */}
       {messages.length === 0 && (
         <div className="px-5 pb-3 flex flex-wrap gap-2">
-          {QUICK_REPLIES.map((reply) => (
+          {copy.quickReplies.map((reply) => (
             <button
               key={reply}
               type="button"
@@ -150,8 +177,6 @@ export default function Chat() {
 /* ─── Message rendering ──────────────────────────────────────────────────── */
 
 interface MessageProps {
-  // Loose typing here — UIMessage shapes vary across SDK versions; we just need
-  // role + parts.
   message: {
     id: string;
     role: 'user' | 'assistant' | 'system';
@@ -160,11 +185,9 @@ interface MessageProps {
 }
 
 function Message({ message }: MessageProps) {
-  if (message.role === 'system') return null; // never render system messages
+  if (message.role === 'system') return null;
 
   const isUser = message.role === 'user';
-
-  // Pull text parts; render tool-call indicators inline.
   const textParts = (message.parts || [])
     .filter((p) => p.type === 'text')
     .map((p) => p.text || '')
@@ -182,11 +205,7 @@ function Message({ message }: MessageProps) {
         {toolParts.length > 0 && !isUser && (
           <div className="mb-2 space-y-1">
             {toolParts.map((tp, i) => (
-              <div
-                key={i}
-                className="text-xs text-zinc-500 italic"
-                title={tp.type}
-              >
+              <div key={i} className="text-xs text-zinc-500 italic" title={tp.type}>
                 ⚙ Using {humanizeToolName(tp.type.replace(/^tool-/, ''))}…
               </div>
             ))}

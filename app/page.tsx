@@ -8,6 +8,9 @@ export default function HomePage() {
         <nav className="flex items-center justify-between mb-20">
           <div className="text-lg font-semibold tracking-tight">Agentwerke</div>
           <div className="flex items-center gap-6 text-sm text-zinc-600">
+            <Link href="/brokerage" className="hover:text-zinc-900">
+              For Broker-Dealers
+            </Link>
             <Link href="/demo" className="hover:text-zinc-900">
               Try Avery
             </Link>

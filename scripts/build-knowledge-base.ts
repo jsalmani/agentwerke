@@ -1,72 +1,99 @@
 /**
- * Knowledge base build script.
+ * Knowledge base build script — multi-vertical.
  *
- * Concatenates all markdown files in /knowledge-base into a single TypeScript
- * constant exported from /lib/knowledge-base.generated.ts. The constant is
- * wrapped in <doc id="..."> XML tags for better Claude attention and citation.
+ * Walks every `knowledge-base*` directory at the repo root and emits a
+ * corresponding TypeScript module under /lib/.
  *
- * Run automatically before `next build` (see package.json `build` script).
+ *   /knowledge-base/         → /lib/knowledge-base.generated.ts          (parent: Agentwerke)
+ *   /knowledge-base-brokerage/ → /lib/knowledge-base-brokerage.generated.ts (BD vertical)
+ *   /knowledge-base-{whatever}/ → /lib/knowledge-base-{whatever}.generated.ts
+ *
+ * Each markdown file in a KB dir is wrapped in <doc id="..."> XML tags
+ * for better Claude attention and citation.
+ *
+ * Run before `next build` (see package.json `build` script).
  * Run manually with: `npm run build:kb`
  */
 
-import { readdirSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync, mkdirSync, statSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const KB_DIR = join(__dirname, '..', 'knowledge-base');
-const OUT_FILE = join(__dirname, '..', 'lib', 'knowledge-base.generated.ts');
+const REPO_ROOT = join(__dirname, '..');
+const LIB_DIR = join(REPO_ROOT, 'lib');
 
-function buildKnowledgeBase() {
-  const files = readdirSync(KB_DIR)
+function buildOne(kbDirName: string) {
+  const kbDir = join(REPO_ROOT, kbDirName);
+  const files = readdirSync(kbDir)
     .filter((f) => f.endsWith('.md'))
     .sort(); // Numbered prefixes (01-, 02-, ...) ensure stable ordering
 
   if (files.length === 0) {
-    throw new Error(`No markdown files found in ${KB_DIR}`);
+    console.warn(`  (skip) no markdown files in ${kbDirName}`);
+    return;
   }
 
   const docs: string[] = [];
   let totalChars = 0;
-
   for (const file of files) {
-    const content = readFileSync(join(KB_DIR, file), 'utf8').trim();
+    const content = readFileSync(join(kbDir, file), 'utf8').trim();
     const id = file.replace(/\.md$/, '');
     docs.push(`<doc id="${id}">\n${content}\n</doc>`);
     totalChars += content.length;
   }
 
   const concatenated = docs.join('\n\n');
-  const approxTokens = Math.ceil(totalChars / 4); // Rough heuristic
+  const approxTokens = Math.ceil(totalChars / 4);
+
+  // Build output filename: knowledge-base → knowledge-base.generated.ts
+  //                       knowledge-base-brokerage → knowledge-base-brokerage.generated.ts
+  const outFile = join(LIB_DIR, `${kbDirName}.generated.ts`);
+
+  // Build a stable export name that's unique per vertical:
+  //   knowledge-base → KNOWLEDGE_BASE
+  //   knowledge-base-brokerage → KNOWLEDGE_BASE_BROKERAGE
+  const exportName = kbDirName.toUpperCase().replace(/-/g, '_');
 
   const output = `/**
  * AUTO-GENERATED FILE — DO NOT EDIT BY HAND
  *
- * Source: /knowledge-base/*.md
+ * Source: /${kbDirName}/*.md
  * Generated: ${new Date().toISOString()}
  * Files: ${files.length}
  * Approximate tokens: ${approxTokens}
  *
- * To update: edit the markdown files in /knowledge-base/ and run \`npm run build:kb\`.
+ * To update: edit the markdown files and run \`npm run build:kb\`.
  */
 
-export const KNOWLEDGE_BASE = ${JSON.stringify(concatenated)};
+export const ${exportName} = ${JSON.stringify(concatenated)};
 
-export const KNOWLEDGE_BASE_META = {
+export const ${exportName}_META = {
   files: ${JSON.stringify(files)},
   generatedAt: ${JSON.stringify(new Date().toISOString())},
   approximateTokens: ${approxTokens},
 };
 `;
 
-  // Make sure the output directory exists
-  mkdirSync(dirname(OUT_FILE), { recursive: true });
-  writeFileSync(OUT_FILE, output, 'utf8');
-
-  console.log(`✓ Built knowledge base from ${files.length} files`);
-  console.log(`  Output: ${OUT_FILE}`);
-  console.log(`  Approximate tokens: ${approxTokens}`);
-  console.log(`  Cache eligibility: ${approxTokens >= 1024 ? 'YES (Sonnet 1024+, Haiku 4096+)' : 'NO — too small to cache'}`);
+  mkdirSync(dirname(outFile), { recursive: true });
+  writeFileSync(outFile, output, 'utf8');
+  console.log(`  ✓ ${kbDirName.padEnd(28, ' ')} ${files.length} files, ~${approxTokens} tokens → ${exportName}`);
 }
 
-buildKnowledgeBase();
+function main() {
+  const candidates = readdirSync(REPO_ROOT)
+    .filter((name) => name.startsWith('knowledge-base'))
+    .filter((name) => statSync(join(REPO_ROOT, name)).isDirectory());
+
+  if (candidates.length === 0) {
+    throw new Error('No knowledge-base directories found at the repo root.');
+  }
+
+  console.log(`Building ${candidates.length} knowledge base${candidates.length === 1 ? '' : 's'}...`);
+  for (const kb of candidates.sort()) {
+    buildOne(kb);
+  }
+  console.log('Done.');
+}
+
+main();

@@ -5,6 +5,10 @@
  * runs Claude with our tools, and streams the response back. Persists every
  * turn to Supabase for the audit trail and pipeline view.
  *
+ * Vertical-aware: the client sends a `vertical` field on the request body
+ * indicating which Avery persona to use ('parent' or 'brokerage'). Each
+ * vertical loads a different KB and slightly different persona instructions.
+ *
  * Architecture choices worth knowing:
  *   - We use Claude Haiku 4.5 by default. It's 4-5x faster than Sonnet on TTFT
  *     and 1/3 the cost. Sonnet for complex reasoning escalations (not implemented
@@ -13,6 +17,7 @@
  *   - System prompt + KB are sent with cacheControl: "1h". 90% off on cache reads,
  *     ~50ms cached prefill vs ~800ms cold. Pass ttl: '1h' explicitly because
  *     Anthropic silently reverted the default to 5-min in March 2026.
+ *     Each vertical gets its own cache (different prompt = different cache key).
  *
  *   - stopWhen: stepCountIs(6) — Claude takes at most 6 reasoning/tool-call
  *     steps before finalizing. Avery should rarely need more than 3-4.
@@ -23,7 +28,7 @@
 
 import { anthropic } from '@ai-sdk/anthropic';
 import { streamText, stepCountIs, convertToModelMessages, type UIMessage } from 'ai';
-import { buildSystemMessage } from '@/lib/system-prompt';
+import { buildSystemMessage, type Vertical } from '@/lib/system-prompt';
 import { buildTools } from '@/lib/tools';
 import { createSession, logMessage } from '@/lib/supabase';
 
@@ -37,8 +42,11 @@ export const maxDuration = 60;
 interface ChatRequestBody {
   messages: UIMessage[];
   sessionId?: string;
+  vertical?: Vertical; // 'parent' | 'brokerage'; defaults to 'parent'
   utm?: { source?: string; campaign?: string };
 }
+
+const VALID_VERTICALS: ReadonlyArray<Vertical> = ['parent', 'brokerage'];
 
 export async function POST(req: Request) {
   let body: ChatRequestBody;
@@ -49,6 +57,11 @@ export async function POST(req: Request) {
   }
 
   const { messages, sessionId: clientSessionId, utm } = body;
+
+  // Validate vertical; default to 'parent' if missing or invalid.
+  const vertical: Vertical = VALID_VERTICALS.includes(body.vertical as Vertical)
+    ? (body.vertical as Vertical)
+    : 'parent';
 
   if (!Array.isArray(messages) || messages.length === 0) {
     return Response.json({ error: 'messages array is required' }, { status: 400 });
@@ -78,13 +91,12 @@ export async function POST(req: Request) {
   const t0 = Date.now();
 
   const result = streamText({
-    // Default to Haiku 4.5 for speed. Override per-deploy via env if you want Sonnet.
     model: anthropic(process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5'),
-    system: buildSystemMessage(),
+    system: buildSystemMessage(vertical),
     messages: await convertToModelMessages(messages),
     tools: buildTools(sessionId),
     stopWhen: stepCountIs(6),
-    temperature: 0.4, // Conversational, but consistent
+    temperature: 0.4,
 
     // Cache the long system prompt + KB. 90% off on cache reads.
     // Pass ttl: '1h' explicitly because Anthropic silently reverted the

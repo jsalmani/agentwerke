@@ -28,7 +28,7 @@ export default function DemoPage() {
         {/* Two-column: chat + side info */}
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 h-[700px]">
-            <Chat />
+            <Chat vertical="parent" />
           </div>
 
           <aside className="space-y-6 text-sm text-zinc-600">

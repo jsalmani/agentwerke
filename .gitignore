@@ -37,7 +37,7 @@ yarn-error.log*
 next-env.d.ts
 
 # generated knowledge base bundle
-lib/knowledge-base.generated.ts
+lib/knowledge-base*.generated.ts
 
 # evals output
 evals/results/
