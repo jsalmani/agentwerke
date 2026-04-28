@@ -18,9 +18,68 @@
 
 import { tool } from 'ai';
 import { z } from 'zod';
-import { getAvailableSlots, createBooking } from './calcom';
+import { getAvailableSlots, createBooking, type AvailableSlot } from './calcom';
 import { notifyFounder, sendAttendeeConfirmation } from './email';
 import { logToolCall, upsertLead, updateSessionStatus } from './supabase';
+
+/**
+ * Date and hour, in America/New_York, for a given ISO timestamp. Used to
+ * group and bucket Cal.com slots when we sample them for the model.
+ *
+ * Returns dateKey as YYYY-MM-DD (sortable lexicographically) and hour as
+ * a 0–23 integer in ET wall-clock time.
+ */
+function etParts(iso: string): { dateKey: string; hour: number } {
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    hour12: false,
+    timeZone: 'America/New_York',
+  });
+  const parts = fmt.formatToParts(new Date(iso));
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
+  return {
+    dateKey: `${get('year')}-${get('month')}-${get('day')}`,
+    hour: parseInt(get('hour'), 10),
+  };
+}
+
+/**
+ * Sample up to 3 slots per day (morning < 12, midday 12–14, afternoon ≥ 15)
+ * spread across all days in the input. We previously took the first 8 slots
+ * globally, which biased everything to day 1 and caused the agent to
+ * truthfully report "no Wednesday slots" when day 1 (Tuesday) had filled
+ * the cap and Wednesday's slots had been silently dropped.
+ *
+ * If a bucket on a given day has multiple slots, we pick the earliest. If a
+ * bucket is empty, that day yields fewer than 3.
+ */
+function sampleSlotsAcrossDays(slots: AvailableSlot[]): AvailableSlot[] {
+  const byDay = new Map<string, AvailableSlot[]>();
+  for (const slot of slots) {
+    const { dateKey } = etParts(slot.start);
+    const list = byDay.get(dateKey);
+    if (list) list.push(slot);
+    else byDay.set(dateKey, [slot]);
+  }
+
+  const sampled: AvailableSlot[] = [];
+  for (const dateKey of [...byDay.keys()].sort()) {
+    const day = byDay.get(dateKey)!;
+    const morning = day.find((s) => etParts(s.start).hour < 12);
+    const midday = day.find((s) => {
+      const h = etParts(s.start).hour;
+      return h >= 12 && h < 15;
+    });
+    const afternoon = day.find((s) => etParts(s.start).hour >= 15);
+    for (const pick of [morning, midday, afternoon]) {
+      if (pick) sampled.push(pick);
+    }
+  }
+  return sampled;
+}
 
 async function instrumented<TIn extends object, TOut>(
   toolName: string,
@@ -80,11 +139,14 @@ export function buildTools(sessionId: string) {
       execute: async (input) =>
         instrumented('getAvailableSlots', sessionId, input, async ({ daysAhead }) => {
           const slots = await getAvailableSlots(daysAhead);
-          const limited = slots.slice(0, 8); // Don't overwhelm the model with options
+          // Surface up to 3 slots per day spread across morning / midday /
+          // afternoon, so the model sees variety across the whole window.
+          // totalAvailable still reflects the full count returned by Cal.com.
+          const sampled = sampleSlotsAcrossDays(slots);
           return {
-            slotsFound: limited.length,
+            slotsFound: sampled.length,
             totalAvailable: slots.length,
-            slots: limited.map((s) => ({
+            slots: sampled.map((s) => ({
               start: s.start,
               end: s.end,
               humanReadable: new Date(s.start).toLocaleString('en-US', {
