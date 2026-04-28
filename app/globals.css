@@ -2,11 +2,144 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────────────────────────────────────
+   Theme tokens — parent (warm) palette is the default on :root.
+   Brokerage palette is applied by setting data-vertical="brokerage" on the
+   page <main> element. The Chat component reads these vars for its surface.
+   ───────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* parent — warm, contemporary */
+  --paper: #f7f3ec;
+  --paper-2: #efe9dd;
+  --ink: #1b1714;
+  --ink-soft: #3a332e;
+  --mute: #857b70;
+  --rule: #e2d9c8;
+  --card: #ffffff;
+  --accent: #c2410c;
+  --accent-soft: #fce7d5;
+  --success: #3f6b41;
+
+  --display-font: var(--font-fraunces), Georgia, serif;
+  --body-font: var(--font-inter), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono-font: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+}
+
+[data-vertical='brokerage'] {
+  /* brokerage — institutional, conservative */
+  --paper: #ffffff;
+  --paper-2: #f4f4f2;
+  --ink: #0b1b2e;
+  --ink-soft: #1f3145;
+  --mute: #5a6776;
+  --rule: #d8dce2;
+  --card: #ffffff;
+  --accent: #8c6b2b;
+  --accent-soft: #f1ebdb;
+  --success: #2f5d3a;
+
+  --display-font: var(--font-source-serif), Georgia, 'Times New Roman', serif;
+
+  /* tighter, harder corners on brokerage */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+}
+
 @layer base {
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-family: var(--body-font);
   }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: #ffffff;
+  }
+}
+
+/* ─── Utilities ─────────────────────────────────────────────────────────── */
+
+.font-display {
+  font-family: var(--display-font);
+  font-feature-settings: 'ss01', 'ss02';
+}
+
+.font-body {
+  font-family: var(--body-font);
+}
+
+.font-mono {
+  font-family: var(--mono-font);
+}
+
+/* Editorial small caps used for section labels */
+.eyebrow {
+  font-family: var(--body-font);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: var(--mute);
+}
+
+.eyebrow-accent {
+  color: var(--accent);
+}
+
+/* Hairline rule — used heavily on brokerage */
+.hairline {
+  border-color: var(--rule);
+}
+
+/* Soft warm shadow — parent only */
+.shadow-warm {
+  box-shadow:
+    0 1px 0 rgba(27, 23, 20, 0.04),
+    0 12px 32px -16px rgba(82, 64, 48, 0.18),
+    0 2px 6px -2px rgba(82, 64, 48, 0.08);
+}
+
+.shadow-card {
+  box-shadow: 0 1px 2px rgba(11, 27, 46, 0.04), 0 1px 0 rgba(11, 27, 46, 0.02);
+}
+
+/* Marquee-like ribbon used on the homepage hero. CSS-only, no JS. */
+@keyframes ribbon-slide {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.ribbon-track {
+  animation: ribbon-slide 38s linear infinite;
+  will-change: transform;
+}
+
+.ribbon-track:hover {
+  animation-play-state: paused;
+}
+
+/* Gentle pulse for "live" status indicator */
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.55; transform: scale(0.85); }
+}
+
+.live-dot {
+  animation: live-pulse 2.2s ease-in-out infinite;
 }
 
 /* Subtle dot animation for "Avery is thinking" indicator */
@@ -20,3 +153,21 @@
 }
 .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
 .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* Hand-drawn underline accent for editorial emphasis (parent) */
+.ink-underline {
+  background-image: linear-gradient(transparent 62%, var(--accent-soft) 62%, var(--accent-soft) 92%, transparent 92%);
+  padding: 0 0.05em;
+}
+
+/* Brass rule — top accent for the "most common" pricing card on brokerage */
+.brass-rule-top {
+  position: relative;
+}
+.brass-rule-top::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--accent);
+}
