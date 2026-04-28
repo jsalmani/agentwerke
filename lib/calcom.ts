@@ -77,6 +77,12 @@ export async function getAvailableSlots(daysAhead: number = 14): Promise<Availab
     start: startDate.toISOString().slice(0, 10), // YYYY-MM-DD
     end: endDate.toISOString().slice(0, 10),
     timeZone: 'America/New_York',
+    // Set explicitly. Cal.com v2 list endpoints support take up to 1000;
+    // without it we trust whatever default the endpoint applies, which
+    // means our per-day sampler in tools.ts could be sampling from an
+    // already-silently-truncated upstream result. 100 is comfortably
+    // above any realistic 1–30 day discovery-call window.
+    take: '100',
   });
 
   const apiKey = process.env.CALCOM_API_KEY;
