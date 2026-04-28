@@ -154,6 +154,21 @@ Cal.com v2 expects `bookingFieldsResponses` to be a map keyed by the **field's s
 
 ---
 
+## MED-5 — `/v2/slots` query had no explicit pagination parameter (partially mitigated)
+
+**File:** `lib/calcom.ts:75-89`
+
+The slots GET sent `eventTypeId`, `start`, `end`, and `timeZone` and nothing else. Cal.com's v2 list endpoints support `take` (max 1000) and a cursor for the long-tail case, but with neither supplied we were trusting whatever default the endpoint applies. With the per-day sampler in `tools.ts` now in front of this, upstream silent truncation would be especially insidious: the sampler would happily pick "a representative slot" out of a list that had already been clipped, laundering hidden data loss into apparent variety.
+
+**Mitigation (partial):** `take=100` is now set explicitly on the query (commit `49a45ee`). 100 is comfortably above any realistic 1–30 day discovery-call window — the wedge use case books 30-min slots into a single founder's calendar, where days yield ~10 slots at the upper end.
+
+**Still open:**
+
+- I have not verified against a live Cal.com response that `/v2/slots` honors `take` the way other v2 list endpoints do. The docs across v2 endpoints aren't perfectly uniform; one `curl https://api.cal.com/v2/slots?eventTypeId=…&take=1` against a busy account would confirm or refute.
+- We do not paginate via cursor. If Cal.com ever returns a `nextCursor` (because the calendar got busy enough that 100 slots in a window is real), we'd still silently truncate — the per-day sampler would just be sampling from the first 100 instead of the first 8, which is better but not correct.
+
+Treat this as a tripwire, not a closed bug. The proper fix is a verifying probe at deploy time and a cursor loop in `getAvailableSlots`.
+
 ## LOW-2 — Duplicate API key check + version drift in `calcom.ts`
 
 **File:** `lib/calcom.ts:82-89`
