@@ -2,6 +2,8 @@
 
 A real Claude agent that lives on agentwerke.com, answers questions, and books discovery calls. Built on Next.js 15 + Vercel AI SDK 6 + Anthropic Claude. The architecture is the same one we ship to clients — the demo and the product are the same thing.
 
+Avery is **multi-vertical**: she runs in two modes (parent SMB agency, and broker-dealer) off a single deployment. Each vertical has its own knowledge base and its own persona overlay, but shares the same tools, audit trail, and infrastructure. Each surface has a distinct visual identity — see `DESIGN-PLAN.md` and `DESIGN-NOTES.md`.
+
 ## Stack at a glance
 
 | Layer | Choice | Why |
@@ -18,30 +20,40 @@ A real Claude agent that lives on agentwerke.com, answers questions, and books d
 ## What's in this repo
 
 ```
-avery-agent/
+agentwerke/
 ├── app/
-│   ├── api/chat/route.ts        # Main agent endpoint — streamText + tools
-│   ├── components/Chat.tsx       # Streaming chat UI with quick-reply pills
-│   ├── demo/page.tsx             # /demo page where Avery lives
-│   ├── page.tsx                  # Homepage
-│   └── layout.tsx, globals.css   # Standard Next.js scaffolding
-├── knowledge-base/               # 11 markdown files Avery references
+│   ├── api/chat/route.ts                 # Main agent endpoint — streamText + tools
+│   ├── components/Chat.tsx               # Streaming chat UI, theme-aware (parent | brokerage)
+│   ├── page.tsx                          # / homepage (parent persona)
+│   ├── demo/page.tsx                     # /demo — chat with parent Avery
+│   ├── brokerage/page.tsx                # /brokerage — broker-dealer landing + chat
+│   ├── layout.tsx                        # Loads Inter, Fraunces, Source Serif 4, JetBrains Mono
+│   └── globals.css                       # CSS variable theme tokens (parent + brokerage)
+├── knowledge-base/                       # 11 markdown files — parent (SMB) Avery
+│   ├── 01-services.md
+│   ├── 02-pricing.md
+│   ├── ... (9 more)
+├── knowledge-base-brokerage/             # 11 markdown files — broker-dealer Avery
 │   ├── 01-services.md
 │   ├── 02-pricing.md
 │   ├── ... (9 more)
 ├── lib/
-│   ├── system-prompt.ts          # Avery's identity, voice, escalation rules
-│   ├── tools.ts                  # 5 tools: getSlots, book, captureLead, handoff
-│   ├── calcom.ts                 # Cal.com v2 API client
-│   ├── email.ts                  # Resend confirmation + founder notification
-│   ├── supabase.ts               # Persistence layer
-│   ├── supabase-schema.sql       # Run once in Supabase SQL Editor
-│   └── knowledge-base.generated.ts  # AUTO-GENERATED from /knowledge-base
+│   ├── system-prompt.ts                  # Vertical-aware: buildSystemMessage('parent' | 'brokerage')
+│   ├── tools.ts                          # Shared tools: getSlots, book, captureLead, handoff
+│   ├── calcom.ts                         # Cal.com v2 API client
+│   ├── email.ts                          # Resend confirmation + founder notification
+│   ├── supabase.ts                       # Persistence layer (sessions, messages, tool_calls, leads)
+│   ├── supabase-schema.sql               # Run once in Supabase SQL Editor
+│   ├── knowledge-base.generated.ts       # AUTO-GENERATED from /knowledge-base
+│   └── knowledge-base-brokerage.generated.ts  # AUTO-GENERATED from /knowledge-base-brokerage
 ├── scripts/
-│   └── build-knowledge-base.ts   # Concatenates KB markdown → TS module
+│   └── build-knowledge-base.ts           # Concatenates BOTH KB folders → TS modules
 ├── evals/
-│   └── run-evals.ts              # 25 regression tests — run on every prompt change
-└── .env.example                  # All env vars documented
+│   └── run-evals.ts                      # Regression tests — parent + brokerage cases
+├── DESIGN-PLAN.md                        # Type, palette, layout direction per page
+├── DESIGN-NOTES.md                       # Choices, struggles, things to reconsider
+├── CODE-AUDIT.md                         # Audit of lib/* — findings only, no modifications
+└── .env.example                          # All env vars documented
 ```
 
 ## First-time setup
@@ -88,7 +100,11 @@ Add your sending domain in Resend (e.g., `agentwerke.com`). Resend gives you DNS
 npm run build:kb
 ```
 
-This concatenates everything in `knowledge-base/*.md` into `lib/knowledge-base.generated.ts`. Re-run after editing any KB markdown file.
+This concatenates **both** knowledge bases:
+- `knowledge-base/*.md` → `lib/knowledge-base.generated.ts` (parent SMB Avery)
+- `knowledge-base-brokerage/*.md` → `lib/knowledge-base-brokerage.generated.ts` (broker-dealer Avery)
+
+Re-run after editing any KB markdown file in either folder.
 
 ### 7. Run locally
 
@@ -96,7 +112,12 @@ This concatenates everything in `knowledge-base/*.md` into `lib/knowledge-base.g
 npm run dev
 ```
 
-Open http://localhost:3000 (homepage) or http://localhost:3000/demo (chat with Avery directly).
+Three pages to walk through:
+- http://localhost:3000 — parent SMB homepage
+- http://localhost:3000/demo — chat with parent Avery
+- http://localhost:3000/brokerage — broker-dealer landing + chat with brokerage Avery
+
+The chat surface is the same React component on both; the persona, knowledge base, and visual theme are switched by the `vertical` prop on `<Chat />` and the `data-vertical="brokerage"` attribute on `<main>` (which swaps the CSS-variable palette).
 
 ### 8. Run evals
 
@@ -104,20 +125,60 @@ Open http://localhost:3000 (homepage) or http://localhost:3000/demo (chat with A
 npm run evals
 ```
 
-Runs 25 test cases against Avery to catch regressions. Should pass all 25 before deploying.
+Regression tests against Avery for both verticals. Each test is tagged with a category and (optionally) a `vertical` of `'parent'` or `'brokerage'`. Brokerage tests verify FINRA vocabulary is used correctly, no compliance-outcome promises are made, regulatory/investment advice is refused, and brokerage-specific banned marketing words ("transform", "revolutionize", "disrupt") never appear.
+
+Should pass all tests before deploying.
+
+## Multi-vertical architecture — how it actually works
+
+### One agent, two personas
+
+`lib/system-prompt.ts` exports `buildSystemMessage(vertical: 'parent' | 'brokerage')`. The prompt is composed from:
+
+| Layer | Shared? | What it covers |
+|---|---|---|
+| Identity, voice, tool-use rules, anti-injection guardrails, booking flow | Shared | Same across verticals |
+| `VERTICAL_DESCRIPTIONS` | Per-vertical | One-paragraph description of the business |
+| `VERTICAL_AUDIENCE` | Per-vertical | Who Avery is talking to (SMB owner vs. CCO/COO at a BD) |
+| `VERTICAL_SPECIFIC_RULES` | Per-vertical | Brokerage adds FINRA vocabulary, no compliance-outcome promises, no regulatory advice, no trade routing |
+| `VERTICAL_KB` | Per-vertical | The full markdown knowledge base for that vertical |
+
+### Routing the right persona
+
+The chat client sends `vertical: 'parent' | 'brokerage'` on every request (`app/components/Chat.tsx`, `prepareSendMessagesRequest`). The server-side `app/api/chat/route.ts` reads it, calls `buildSystemMessage(vertical)`, and streams a response from Claude Haiku 4.5 (or Sonnet 4.6 on escalation). All four tools (`getAvailableSlots`, `bookDiscoveryCall`, `captureLead`, `handoffToHuman`) are shared — there's no per-vertical tool divergence yet.
+
+### Visual identity
+
+The two verticals are visually distinct on purpose:
+- **Parent** uses Fraunces (display) + Inter (body), warm umber accent (#C2410C) on a paper-toned background, soft warm shadows, rounded corners. Editorial / approachable register.
+- **Brokerage** uses Source Serif 4 (display) + Inter (body), navy ink (#0B1B2E) with a brass accent (#8C6B2B), hairline-driven layout, tighter corners. Institutional / WSJ register.
+
+Both palettes live as CSS variables in `app/globals.css`. The brokerage palette overrides the parent default whenever the page's `<main>` carries `data-vertical="brokerage"`. The same `<Chat />` component reads those variables — no component-level branching beyond a few rounded-vs-square corner tweaks.
+
+See `DESIGN-PLAN.md` for the full design rationale and `DESIGN-NOTES.md` for the retrospective.
 
 ## Iterating on Avery
 
 ### Editing what Avery says
 
-- **Voice, banned words, escalation rules** → edit `knowledge-base/11-voice-meta.md`
-- **Pricing** → edit `knowledge-base/02-pricing.md`
-- **Services** → edit `knowledge-base/01-services.md`
-- **Identity, tool use rules, anti-injection guardrails** → edit `lib/system-prompt.ts`
+- **Voice, banned words, escalation rules (parent)** → edit `knowledge-base/11-voice-meta.md`
+- **Voice, banned words, escalation rules (brokerage)** → edit `knowledge-base-brokerage/11-voice-meta.md`
+- **Parent pricing** → `knowledge-base/02-pricing.md`
+- **Brokerage pricing** → `knowledge-base-brokerage/02-pricing.md`
+- **Identity, tool-use rules, vertical-specific overlays, anti-injection guardrails** → `lib/system-prompt.ts`
 
 After any KB edit, re-run `npm run build:kb` (or just `npm run build` which does both).
 
-After any prompt edit, run `npm run evals` to make sure you didn't regress something.
+After any prompt edit, run `npm run evals` to make sure neither persona regressed.
+
+### Adding a new vertical
+
+1. Create `knowledge-base-<vertical>/` with the same 11-file structure (or whatever subset makes sense).
+2. Update `scripts/build-knowledge-base.ts` to emit a `lib/knowledge-base-<vertical>.generated.ts`.
+3. Add the new vertical to the `Vertical` union, `VERTICAL_DESCRIPTIONS`, `VERTICAL_AUDIENCE`, `VERTICAL_SPECIFIC_RULES`, and `VERTICAL_KB` in `lib/system-prompt.ts`.
+4. Add a `data-vertical="<vertical>"` palette block in `app/globals.css` if you want a distinct visual identity.
+5. Create a landing page at `app/<vertical>/page.tsx` that renders `<Chat vertical="<vertical>" />`.
+6. Add eval cases tagged with `vertical: '<vertical>'` to `evals/run-evals.ts`.
 
 ### Adding a new tool
 
