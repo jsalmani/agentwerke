@@ -154,20 +154,20 @@ Cal.com v2 expects `bookingFieldsResponses` to be a map keyed by the **field's s
 
 ---
 
-## MED-5 — `/v2/slots` query had no explicit pagination parameter (partially mitigated)
+## MED-5 — `/v2/slots` query has no explicit pagination parameter (unverified, unmitigated)
 
 **File:** `lib/calcom.ts:75-89`
 
-The slots GET sent `eventTypeId`, `start`, `end`, and `timeZone` and nothing else. Cal.com's v2 list endpoints support `take` (max 1000) and a cursor for the long-tail case, but with neither supplied we were trusting whatever default the endpoint applies. With the per-day sampler in `tools.ts` now in front of this, upstream silent truncation would be especially insidious: the sampler would happily pick "a representative slot" out of a list that had already been clipped, laundering hidden data loss into apparent variety.
+The slots GET sends `eventTypeId`, `start`, `end`, and `timeZone` and nothing else. Cal.com's v2 list endpoints support `take` (max 1000) and a cursor for the long-tail case, but with neither supplied we are trusting whatever default the endpoint applies. With the per-day sampler in `tools.ts` now in front of this, upstream silent truncation would be especially insidious: the sampler would happily pick "a representative slot" out of a list that had already been clipped, laundering hidden data loss into apparent variety.
 
-**Mitigation (partial):** `take=100` is now set explicitly on the query (commit `49a45ee`). 100 is comfortably above any realistic 1–30 day discovery-call window — the wedge use case books 30-min slots into a single founder's calendar, where days yield ~10 slots at the upper end.
+**Attempted mitigation (reverted):** A prior change (commit `49a45ee`, reverted) added `take=100` to the query on the assumption that `/v2/slots` followed the same list-endpoint convention as other v2 endpoints. A live request returned HTTP 400 with `property take should not exist` — `/v2/slots` rejects `take` outright. The `take=100` parameter is not a valid mitigation here and has been removed.
 
 **Still open:**
 
-- I have not verified against a live Cal.com response that `/v2/slots` honors `take` the way other v2 list endpoints do. The docs across v2 endpoints aren't perfectly uniform; one `curl https://api.cal.com/v2/slots?eventTypeId=…&take=1` against a busy account would confirm or refute.
-- We do not paginate via cursor. If Cal.com ever returns a `nextCursor` (because the calendar got busy enough that 100 slots in a window is real), we'd still silently truncate — the per-day sampler would just be sampling from the first 100 instead of the first 8, which is better but not correct.
+- The underlying question — does `/v2/slots` silently truncate, and if so at what limit, and is there a cursor or alternative pagination knob? — remains unverified. The shape of the response and any nextCursor / hasMore semantics need to be confirmed against Cal.com's published v2 docs or by asking Cal.com support directly, since the v2 list-endpoint conventions clearly do not apply uniformly to `/v2/slots`.
+- Until that is resolved, the per-day sampler in `tools.ts` is operating on an upstream list of unknown completeness. Treat this as an open tripwire.
 
-Treat this as a tripwire, not a closed bug. The proper fix is a verifying probe at deploy time and a cursor loop in `getAvailableSlots`.
+The proper fix is to (a) consult Cal.com docs/support for `/v2/slots`-specific pagination semantics, then (b) implement whatever the correct cursor / page mechanism is in `getAvailableSlots`. Do not re-add `take` without first confirming via the docs that the endpoint accepts it.
 
 ## LOW-2 — Duplicate API key check + version drift in `calcom.ts`
 
