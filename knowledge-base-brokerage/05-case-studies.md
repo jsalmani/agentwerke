@@ -15,10 +15,10 @@ A Compliance Co-Pilot integrated with the firm's Smarsh archiving system, RegEd 
 3. **Branch audit response package builder** — when FINRA gives the firm 30 days' notice on a branch audit, the agent compiles 24 months of records (supervisory reviews, training records, advertising approvals, OBAs, gift logs, blotters) into the response package
 
 **The result**
-Six months in: review queue down to under 24 hours; CCO's hours back to 45-50/week; the most recent branch audit took 95 hours of senior staff time (down from ~110 average). The firm paused a planned compliance analyst hire.
+Six months in: review queue down to under 24 hours; the CCO's hours back to 45-50/week; the most recent branch audit took 95 hours of senior staff time, down from ~110 average. With the existing compliance team's effective capacity meaningfully larger, the firm paused a planned compliance analyst hire.
 
 **Engagement details**
-Compliance Co-Pilot tier ($40,000 setup + $4,000/month). 12-week build. 90-day check-in showed the agent processing ~22,000 review items per month at >97% successful disposition rate (correct human-final disposition agreed with agent's recommendation).
+Compliance Co-Pilot tier ($40,000 setup + $4,000/month). 12-week build. 90-day check-in showed the team plus the Co-Pilot moving ~22,000 review items per month at >97% successful disposition rate (correct human-final disposition agreed with the agent's recommendation).
 
 ---
 
@@ -46,8 +46,8 @@ Onboarding Accelerator tier ($25,000 setup + $2,000/month). 8-week build. After 
 
 ## What both engagements have in common
 
-- The agent handled the **structured, high-volume 60-75% of the work**. Judgment calls, escalations, and complex cases stayed with humans.
+- The team, with the agent doing the heavy lifting, absorbed the **structured, high-volume 60-75% of the work** together. Judgment calls, escalations, and complex cases stayed with humans, where they belong.
 - The agent integrated with the **existing tech stack** — no platform migration required.
 - The build delivered in **8-12 weeks** from signed SOW.
 - Every regulatory output passed through human approval. The agent extended supervisory capacity; it didn't replace supervision.
-- Both clients achieved **payback within five to seven months** when measured against the avoided hire or the operational improvement.
+- Both clients reached **payback within five to seven months** measured against what equivalent capacity through hiring would have cost (or the audit-cycle time saved).

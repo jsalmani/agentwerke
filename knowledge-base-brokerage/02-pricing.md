@@ -54,14 +54,14 @@ For growth-mode BDs trying to attract reps from wirehouses with superior operati
 
 ## How this compares to your alternatives
 
-Most independent BDs evaluating us are weighing the cost against (a) hiring more compliance and ops staff, or (b) buying additional headcount-based licenses for existing tools.
+Most independent BDs evaluating us aren't trying to replace compliance staff — they're trying to extend what their existing team can take on without adding headcount. The traditional way to add that capacity is more bodies or more per-seat tooling:
 
 - A senior compliance officer at an independent BD runs $120,000-$180,000 fully loaded.
 - A compliance analyst runs $75,000-$110,000 fully loaded.
 - A rep onboarding specialist runs $65,000-$95,000 fully loaded.
 - Per-seat compliance tech (depending on the vendor) runs $200-$800/seat/month.
 
-Our Compliance Co-Pilot at $40,000 setup plus $48,000 in retainer fees comes to **$88,000 in year one** — less than the loaded cost of one compliance analyst, while extending the entire compliance team's capacity by 3-5x. Year two and beyond drops to $48,000.
+Our Compliance Co-Pilot at $40,000 setup plus $48,000 in retainer fees comes to **$88,000 in year one**, while extending the entire compliance team's capacity by 3-5x. Year two and beyond drops to $48,000. The math is meaningfully better than headcount, but the real point is that the people you already trust take on more of the work that actually needs them.
 
 ## What's not included
 

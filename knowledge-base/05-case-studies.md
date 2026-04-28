@@ -17,7 +17,7 @@ An Office Manager Agent integrated with the firm's Gmail, Google Calendar, and C
 - Prepares a Monday-morning summary of the week's calendar, deadlines, and outstanding items
 
 **The result**
-The firm did not hire the third admin. The two existing admins reported reclaiming 12-15 hours per week between them — about a third of a full-time role. The managing partner reclaimed 4-5 hours per week.
+The two existing admins reclaimed 12-15 hours per week between them — about a third of a full-time role of capacity they didn't have before. The managing partner got 4-5 hours per week of his time back. With that much added headroom on the existing team, hiring the third admin became unnecessary.
 
 **Engagement details**
 Office Manager Agent tier ($12,000 setup + $1,000/month). Two-week build. 90-day check-in showed the agent handling ~3,200 interactions per month at >95% successful completion rate.
@@ -41,7 +41,7 @@ An Office Manager Agent integrated with the company's Microsoft 365 (email and c
 The departing office manager spent her last two weeks "training" the agent by working alongside it — answering its clarifying questions in Slack, correcting its drafts, and approving its workflows.
 
 **The result**
-The company replaced about 70% of the departing office manager's responsibilities with the agent and shifted the remaining 30% (relationship-driven customer calls, complex vendor disputes, hiring support) to a part-time office coordinator at $22/hour, 20 hours per week. Total annual savings versus a full replacement hire: approximately $42,000.
+The remaining team plus the agent absorbed about 70% of the departing office manager's responsibilities. A part-time office coordinator at $22/hour, 20 hours per week handled the relationship-driven 30% — customer calls, complex vendor disputes, hiring support. The team kept moving without a senior backfill, and the company saved approximately $42,000 annually versus a full replacement hire.
 
 **Engagement details**
 Operations Suite tier ($25,000 setup + $2,200/month). Three-week build. 6-month check-in showed sustained performance and the company was discussing adding a sales-development agent for inbound web leads.
@@ -50,8 +50,8 @@ Operations Suite tier ($25,000 setup + $2,200/month). Three-week build. 6-month 
 
 ## What both engagements have in common
 
-- The agent handled the **structured, repetitive 60-75% of the role**. The remaining work, which requires human judgment and relationship-building, stayed with humans.
+- The team, with the agent doing the heavy lifting, took on the **structured, repetitive 60-75% of the role** together — freeing the people to spend more time on judgment and relationships.
 - The agent integrated with **existing tools** — no system migration required.
 - The build was **two to three weeks** from signed SOW to working agent.
 - The retainer covers **continuous monthly improvement**, not just maintenance.
-- Both clients achieved **payback in under five months** when measured against the avoided hire.
+- Both clients reached **payback in under five months** when measured against what equivalent capacity through hiring would have cost.

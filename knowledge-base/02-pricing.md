@@ -48,15 +48,15 @@ For mature small businesses with multiple departments or locations who want an a
 
 ## How this compares to your alternatives
 
-Most of our clients evaluate us against hiring an in-house office manager or executive assistant. Here's how the numbers work in our market (Triangle, NC):
+Most of our clients aren't looking to replace anyone — they're looking to extend what their existing team can take on without adding headcount. Here's what equivalent capacity costs the traditional way in our market (Triangle, NC):
 
 - A full-time Office Manager in Raleigh-Durham runs $50,000-$65,000 in base salary, or $65,000-$85,000 fully loaded once you add benefits, payroll tax, and PTO.
 - A full-time Executive Assistant runs $90,000-$110,000 fully loaded.
 - A premium dedicated virtual assistant from a service like Belay or Boldly runs $30,000-$45,000 per year for part-time, $50,000-$65,000 for full-time.
 
-Our Office Manager Agent at $12,000 setup plus $12,000 in retainer fees comes to **$24,000 in year one and $12,000 every year after** — roughly one-third the cost of an in-house office manager, and well below what a premium virtual assistant service charges.
+Our Office Manager Agent at $12,000 setup plus $12,000 in retainer fees comes to **$24,000 in year one and $12,000 every year after** — meaningful extra capacity for your existing team at well under the loaded cost of a traditional hire.
 
-The agent doesn't take sick days, doesn't turn over, and doesn't need a 90-day ramp.
+The agent doesn't take sick days, doesn't turn over, and doesn't need a 90-day ramp — and your people stay focused on the work that actually needs them.
 
 ## What's not included
 

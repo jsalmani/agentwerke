@@ -53,11 +53,11 @@ export default function BrokerageLandingPage() {
                 without adding headcount.
               </h1>
               <p className="mt-7 max-w-2xl text-[17px] lg:text-lg text-ink-soft leading-[1.65]">
-                We build custom Claude-based agents for the operational and compliance work
-                that's drowning your back office. Onboarding, account opening, compliance review
-                queue triage, branch audit prep. Built on your written supervisory procedures,
-                integrated with the tools you already use, and designed for FINRA defensibility
-                from day one.
+                We build custom Claude-based agents that extend your existing compliance and
+                operations team — onboarding, account opening, compliance review queue triage,
+                branch audit prep. Built on your written supervisory procedures, integrated with
+                the tools you already use, and designed for FINRA defensibility from day one. Your
+                CCO supervises; the agent does the heavy lifting.
               </p>
 
               <div className="mt-10 flex flex-wrap gap-3">
@@ -75,6 +75,10 @@ export default function BrokerageLandingPage() {
                 </a>
               </div>
 
+              <p className="mt-6 font-mono text-[11px] tracking-[0.18em] uppercase text-[var(--accent)]">
+                Your compliance team, with room to breathe.
+              </p>
+
               <p className="mt-5 text-sm text-mute max-w-xl leading-relaxed">
                 The agent on this site books real calls, sends real confirmations, and references
                 our real knowledge base — same architecture we ship to client firms.
@@ -90,8 +94,8 @@ export default function BrokerageLandingPage() {
                 $88k
               </div>
               <p className="text-[14px] text-ink-soft leading-relaxed">
-                Year-one cost of the Compliance Co-Pilot — less than the loaded cost of one
-                compliance analyst, while extending the entire team's capacity 3–5×.
+                Year-one cost of the Compliance Co-Pilot — extending your entire compliance team's
+                capacity 3–5× without adding headcount.
               </p>
               <a
                 href="#pricing"

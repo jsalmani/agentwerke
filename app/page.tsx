@@ -36,14 +36,14 @@ export default function HomePage() {
             </div>
 
             <h1 className="font-display font-medium text-[44px] sm:text-[56px] lg:text-[76px] leading-[1.02] tracking-[-0.02em] text-ink">
-              Custom Claude agents that handle the{' '}
-              <span className="ink-underline italic">office work</span> draining your team.
+              Give your team a Claude agent for the{' '}
+              <span className="ink-underline italic">office work</span> draining everyone.
             </h1>
 
             <p className="mt-7 max-w-2xl text-lg lg:text-xl text-ink-soft leading-relaxed">
-              We build production-grade AI agents for small businesses. Office manager work,
-              customer intake, scheduling, follow-ups. Live in two weeks. $12,000 setup plus
-              $1,000/month — roughly one-third the cost of an in-house hire.
+              We build production-grade Claude agents that extend what your existing team can take
+              on — office manager work, customer intake, scheduling, follow-ups. Live in two weeks.
+              $12,000 setup plus $1,000/month. Same humans, with capacity they didn't have before.
             </p>
 
             <div className="mt-9 flex flex-wrap gap-3">
@@ -60,6 +60,10 @@ export default function HomePage() {
                 Email us
               </a>
             </div>
+
+            <p className="mt-6 font-mono text-[12px] tracking-[0.16em] uppercase text-[var(--accent)]">
+              Same humans. New tools. Better leverage.
+            </p>
 
             <p className="mt-5 text-sm text-mute max-w-xl leading-relaxed">
               The agent on this site books real calls, sends real confirmations, and references
@@ -92,7 +96,7 @@ export default function HomePage() {
           <div className="max-w-2xl mb-14">
             <div className="eyebrow mb-4">What we build</div>
             <h2 className="font-display font-medium text-[34px] lg:text-[44px] leading-[1.08] tracking-[-0.015em] text-ink">
-              Three patterns that solve the boring 70% of small-business operations.
+              Three patterns that give your team back the boring 70% of small-business operations.
             </h2>
           </div>
 
@@ -100,7 +104,7 @@ export default function HomePage() {
             <ProductCard
               num="01"
               title="Office Manager Agent"
-              body="Inbox triage, calendar coordination, vendor follow-ups, intake routing, weekly reports. The boring 70% of an office manager's role."
+              body="Inbox triage, calendar coordination, vendor follow-ups, intake routing, weekly reports. Your team keeps the relationships and the judgment; the agent does the rest."
               meta="Most common · 2-week build"
             />
             <ProductCard

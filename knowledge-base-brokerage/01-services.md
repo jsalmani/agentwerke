@@ -1,17 +1,19 @@
 # What We Build for Independent Broker-Dealers
 
-Agentwerke builds custom AI agents for independent broker-dealers — the firms that recruit, supervise, and support 1099 reps. We focus on the operational and compliance work that drains your back office: onboarding, account opening, compliance review, and audit prep.
+Agentwerke builds custom Claude-based agents that extend your existing compliance and operations teams — the people who already recruit, supervise, and support your 1099 reps. We focus on the operational and compliance work that's structurally too much for the headcount you have: onboarding, account opening, compliance review, and audit prep.
+
+The framing is deliberate: same compliance team, with room to breathe. Not a replacement for your CCO, analysts, or ops coordinators — added capacity for the people you already trust.
 
 ## Core offering: the Compliance Co-Pilot
 
-Most BDs we work with start with a Compliance Co-Pilot. It's an agent that operates inside your compliance workflow — under your CCO's supervision — and handles the high-volume, repetitive review work that's drowning your team:
+Most BDs we work with start with a Compliance Co-Pilot. The agent operates inside your compliance workflow under your CCO's supervision, doing the heavy lifting on the high-volume, repetitive review work that's drowning your team:
 
-- **Compliance review queue triage** — pre-screens rep emails, social media posts, marketing materials, OBA disclosures, gift logs, and expense reports. Categorizes each item, flags risks, drafts approval or denial responses for human review. Compliance officers handle 3-5x more items per day.
+- **Compliance review queue triage** — pre-screens rep emails, social media posts, marketing materials, OBA disclosures, gift logs, and expense reports. Categorizes each item, flags risks, drafts approval or denial responses for human review. Your compliance officers' throughput on the queue goes 3-5x.
 - **Branch audit prep** — when FINRA gives you 30 days' notice on a branch audit, the agent compiles 18-24 months of records into the response package automatically. What used to be 40-60 hours of senior compliance time becomes a half-day review of an already-assembled package.
 - **Customer complaint intake and routing** — logs new complaints within FINRA's reporting windows, classifies the complaint type, drafts the customer acknowledgment, and stages the FINRA reporting decision for human approval.
 - **OBA disclosure review** — interviews reps about new outside business activities, drafts the disclosure, surfaces conflict-of-interest concerns for the supervising principal.
 
-Every action by the agent is logged, every decision is staged for human approval before it leaves the firm. The agent never sends a regulatory filing on its own. It does the work; your principals approve and sign.
+Every action by the agent is logged, every decision is staged for human approval before it leaves the firm. The agent never sends a regulatory filing on its own. It does the work; your principals apply the judgment, approve, and sign.
 
 ## Other agent types we build
 
@@ -45,3 +47,5 @@ For BDs trying to attract reps from wirehouses with better operational support. 
 ## Engagement model
 
 Two-week discovery, 8-16 week build depending on tier, supervised launch with shadow mode for 30 days, then ongoing optimization. We integrate with your existing systems — we don't ask you to switch platforms. See the Process and Pricing docs for detail.
+
+The outcome we're aiming at is straightforward: your compliance and ops team's capacity grows 3-5x without growing the headcount line.
